@@ -13,17 +13,21 @@ public class BloomFilter<T> {
 
     public BloomFilter(int bitSetSize, List<Function<T, Integer>> hashFunctions) {
 
-        if (bitSetSize <= 0) {
-            throw new IllegalArgumentException("Bit set size must be positive.");
+        if (bitSetSize <= 0 || bitSetSize > Integer.MAX_VALUE / 8) {
+            throw new IllegalArgumentException("Bit set size must be positive and not exceed Integer.MAX_VALUE / 8.");
         }
 
         if (hashFunctions == null || hashFunctions.isEmpty()) {
             throw new IllegalArgumentException("At least one hash function is required.");
         }
 
+        // Size of the bit set
         this.bitSetSize = bitSetSize;
+        // List of hash functions
         this.hashFunctions = hashFunctions;
+        // Number of hash functions
         this.numberOfHashFunctions = hashFunctions.size();
+        // Bit set for storing element presence
         this.bitSet = new BitSet(bitSetSize);
     }
 
@@ -34,7 +38,7 @@ public class BloomFilter<T> {
         }
 
         for (Function<T, Integer> hashFunction : hashFunctions) {
-            int hash = Math.abs(hashFunction.apply(element) % bitSetSize);
+            int hash = (int) Long.remainderUnsigned(Math.abs((long) hashFunction.apply(element)), bitSetSize);
             bitSet.set(hash);
         }
 
@@ -47,7 +51,7 @@ public class BloomFilter<T> {
         }
 
         for (Function<T, Integer> hashFunction : hashFunctions) {
-            int hash = Math.abs(hashFunction.apply(element) % bitSetSize);
+            int hash = (int) Long.remainderUnsigned(Math.abs((long) hashFunction.apply(element)), bitSetSize);
             if (!bitSet.get(hash)) {
                 return false;
             }
